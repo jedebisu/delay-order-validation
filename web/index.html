@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Delay Order Validation - Dispatcher Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+  <div class="min-h-screen flex flex-col">
+    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
+      <h1 class="text-xl font-bold">Delay Order Validation — Dispatcher Portal</h1>
+      <span class="bg-blue-800 text-xs px-3 py-1 rounded-full">PC / Web View</span>
+    </header>
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-1">
+        <h2 class="text-lg font-semibold border-b pb-3 mb-4">New Work Order Request</h2>
+        <form id="requestForm" class="space-y-4">
+          <div><label class="block text-sm font-medium">WORK ORDER NUMBER</label><input type="text" id="workordernumber" required placeholder="WO-10029" class="w-full mt-1 p-2 border rounded-md"></div>
+          <div><label class="block text-sm font-medium">PARTNER</label><select id="partner" class="w-full mt-1 p-2 border rounded-md"><option value="Ebisu">Ebisu</option><option value="TESCO">TESCO</option></select></div>
+          <div><label class="block text-sm font-medium">CHANNEL</label><select id="channel" class="w-full mt-1 p-2 border rounded-md"><option value="Online">Online</option><option value="Ebisu">Ebisu</option><option value="IPG">IPG</option><option value="Tesco">Tesco</option><option value="WMC">WMC</option></select></div>
+          <div class="border-t pt-3"><label class="flex items-center space-x-2 text-sm"><input type="checkbox" id="with3waynotes"><span>WITH 3 WAY NOTES</span></label></div>
+          <div><label class="block text-sm font-medium">PERSON 3 WAYED</label><input type="text" id="person3wayed" placeholder="Subscriber Name" class="w-full mt-1 p-2 border rounded-md"></div>
+          <div><label class="block text-sm font-medium">3 WAY NOTES</label><textarea id="threewaynotes" rows="3" placeholder="Notes..." class="w-full mt-1 p-2 border rounded-md text-sm"></textarea></div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-md font-medium">Submit Request</button>
+        </form>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
+        <div class="flex justify-between items-center border-b pb-3 mb-4"><h2 class="text-lg font-semibold">Submitted Requests</h2><button onclick="fetchRequests()" class="text-sm bg-gray-100 px-3 py-1 rounded border">↻ Refresh</button></div>
+        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b"><tr><th class="p-2">WO #</th><th class="p-2">PARTNER</th><th class="p-2">CHANNEL</th><th class="p-2">STATUS</th><th class="p-2">BDE REMARKS / APPROVER</th><th class="p-2">TIMESTAMP</th></tr></thead><tbody id="requestsTableBody"></tbody></table></div>
+      </div>
+    </main>
+  </div>
+  <script>
+    const API_URL = 'http://localhost:5001/api/requests';
+    async function fetchRequests() {
+      const res = await fetch(API_URL); const data = await res.json();
+      const tbody = document.getElementById('requestsTableBody'); tbody.innerHTML = '';
+      data.forEach(item => {
+        const badgeColor = { PENDING: 'bg-amber-100 text-amber-800', APPROVED: 'bg-green-100 text-green-800', DISAPPROVED: 'bg-red-100 text-red-800', DELAYED: 'bg-orange-100 text-orange-800', CANCELLED: 'bg-gray-100 text-gray-800' }[item.status] || 'bg-gray-100';
+        tbody.innerHTML += `<tr class="border-b"><td class="p-2 font-bold">${item.workordernumber}</td><td class="p-2">${item.partner}</td><td class="p-2">${item.channel}</td><td class="p-2"><span class="px-2 py-1 rounded text-xs font-semibold ${badgeColor}">${item.status}</span></td><td class="p-2 text-xs">${item.bderemarks || ''} ${item.delaydateandtime ? `<div class="text-orange-600">Delayed To: ${new Date(item.delaydateandtime).toLocaleString()}</div>` : ''} ${item.approverEmail ? `<div class="text-gray-400">By: ${item.approverEmail}</div>` : ''}</td><td class="p-2 text-xs text-gray-500">${new Date(item.timestamp).toLocaleString()}</td></tr>`;
+      });
+    }
+    document.getElementById('requestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workordernumber: document.getElementById('workordernumber').value, partner: document.getElementById('partner').value, channel: document.getElementById('channel').value, with3waynotes: document.getElementById('with3waynotes').checked, person3wayed: document.getElementById('person3wayed').value, threewaynotes: document.getElementById('threewaynotes').value }) });
+      document.getElementById('requestForm').reset(); fetchRequests();
+    });
+    fetchRequests(); setInterval(fetchRequests, 3000);
+  </script>
+</body>
+</html>
