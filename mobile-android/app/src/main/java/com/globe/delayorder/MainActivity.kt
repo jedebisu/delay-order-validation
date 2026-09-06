@@ -14,7 +14,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
 
-    private val BASE_URL = "http://10.0.2.2:5001/"
+    // Live Vercel Backend API URL
+    private val BASE_URL = "https://delay-order-validation-b01bqe7dc-jedebisus-projects.vercel.app/"
     private val approverEmail = "cpjuezan@globe.com.ph"
 
     private val apiService: ApiService by lazy {
@@ -37,12 +38,16 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val pendingOrders = response.body()?.filter { it.status == "PENDING" }
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "Loaded ${pendingOrders?.size ?: 0} pending orders", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Connected to Vercel! ${pendingOrders?.size ?: 0} pending orders.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Server Error: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Connection Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Connection Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
