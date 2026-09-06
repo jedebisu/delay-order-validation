@@ -1,48 +1,101 @@
+// Delay Order Validation - Vercel serverless API
+// Data is seeded from the NegOr Install Delays tracker (CSV import) plus the
+// original sample request. New submissions are kept in memory for the lifetime
+// of the running function instance.
+
 let memoryRequests = [
-  {
-    id: 1,
-    timestamp: new Date().toISOString(),
-    workordernumber: "WO-99482",
-    partner: "Ebisu",
-    channel: "IPG",
-    delay: "",
-    delaydateandtime: null,
-    with3waynotes: true,
-    person3wayed: "John Doe (Subscriber)",
-    threewaynotes: "Subscriber requested delay due to site renovation. Numbers: 09171234567.",
-    status: "PENDING",
-    bderemarks: "",
-    approverEmail: null,
-    actionTakenAt: null
-  }
+  {"id": 2, "timestamp": "2026-09-02T11:22:18.000Z", "workordernumber": "772919443A", "partner": "EBISU", "channel": "", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, HOTLINE AGENT,", "threewaynotes": "Ruth Viray \n\n9173098951 9071225111 | SUBS UNCONTACTED - CANNOT BE REACH 9173098951 RINGING ONLY 9071225111 AND CANT LOCATE/ COOR BY DISP CYBELLE AND HOTLINE AGENT BEATET ORTEZ AND BDE CLAIRE/CALLTHRU 10:23AM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 3, "timestamp": "2026-09-02T11:23:03.000Z", "workordernumber": "764397829A", "partner": "EBISU", "channel": "", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER,", "threewaynotes": "EDNA REVAGORDA\n\n9065577170 | SUBS UNCONTACTED - CANNOT BE REACH AND CANT LOCATE / HINDI NA SCOPE NI HOTLINE DAHIL TOL /COOR BY DISP CYBELLE AND FEE TINA AND BDE CLAIRE/CALLTHRU 10:41AM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 4, "timestamp": "2026-08-29T12:54:51.000Z", "workordernumber": "GFP-202608048EUEZQ-2", "partner": "TESCO", "channel": "IPG", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, SALES ADMIN, OM,", "threewaynotes": "BACTOL 10AM CALLTRU 9291721082 KIRK JIMUEL BAROT SUBS FOR REVISIT DUE TO SUBS UNCONTACTED-BUSY NUMBER AND HOUSE CLOSE COOR WITH BDE CLAIRE, ADMIN SHIENA AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 5, "timestamp": "2026-08-29T10:33:58.000Z", "workordernumber": "776030483A", "partner": "TESCO", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "OM, DISPATCHER, FEE,", "threewaynotes": "BACTOL 9AM CALLTRU 9501620991 COOR WITH THEODORE MIKHAIL PRETE SUBS RESCHED BY SUBS TOM DUE TO BUSY SCHEDULE, AS PER SUBS BUSY SILA SA NGAYON PABALIKAN NALANG DONE 3WAY CALL WITH OM NOEL, DISP RACHEL AND FO NORMAND", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 6, "timestamp": "2026-08-29T11:49:11.000Z", "workordernumber": "776277653A", "partner": "TESCO", "channel": "", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "OM, DISPATCHER, FEE,", "threewaynotes": "BAYLON 11:10AM CALLTRU 9952974844 MARIZ LIM SUBS UNKNOWN AT GIVEN ADDRESS AND UNCONTACTED CANT BE REACHED, FOR REDISPATCH TOM DONE 3WAY CALL WITH DISP RACHEL AND OM NOEL AND FO NORMAND", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 7, "timestamp": "2026-08-29T10:41:27.000Z", "workordernumber": "776357442A", "partner": "EBISU", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN, SUBS,", "threewaynotes": "9772856084|RESCHED BY SUBS TOM , AS PER SUBS BALIKAN NYO NALANG AKO BUKAS DAHIL BUKAS PA KAMI LILIPAT SA BAGONG LILIPATAN NAMIN|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN GEM|CALLTHRU 10:20AM\n1d386f7b", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 8, "timestamp": "2026-08-29T12:41:47.000Z", "workordernumber": "GLS-2505394434-2", "partner": "EBISU", "channel": "STORE", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN, SUBS,", "threewaynotes": "9059143207|NOT VALID FOR DEVIATION DUE TO OVS OF 1KM, NO POLE ATTACHED, CROSSING PRIVATE PROPERTIES AND NO NEAREST NAP AVAILABLE ONSITE PRONE TO REPAIR SUBS LATLONG:9.308608,123.289734 NAP:9.3107437,123.2886933|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN GEM|VISITED 12:05PM\nUNIQUE ID 9059143207|NOT VALID FOR DEVIATION DUE TO OVS OF 1KM, NO POLE ATTACHED, CROSSING PRIVATE PROPERTIES AND NO NEAREST NAP AVAILABLE ONSITE PRONE TO REPAIR SUBS LATLONG:9.308608,123.289734 NAP:9.3107437,123.2886933|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN GEM|VISITED 12:05PM\nUNIQUE ID 9059143207|NOT VALID FOR DEVIATION DUE TO OVS OF 1KM, NO POLE ATTACHED, CROSSING PRIVATE PROPERTIES AND NO NEAREST NAP AVAILABLE ONSITE PRONE TO REPAIR SUBS LATLONG:9.308608,123.289734 NAP:9.3107437,123.2886933|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN GEM|VISITED 12:05PM\nUNIQUE ID 8254d41e", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 9, "timestamp": "2026-08-29T17:29:33.000Z", "workordernumber": "776431118A", "partner": "TESCO", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, SUBS, SALES ADMIN,", "threewaynotes": "9364336458|RESCHED TOM FOR VISIT, AS PER SUBS BALIKAN NYO NALANG AKO SA UMAGA AT 10-11AM|COOR BY SUBS,DISP CYBELLE AND EBISU SALES ADMIN MARIA|CALLTHRU 4:10PM 0d5cba30", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 10, "timestamp": "2026-08-29T17:28:15.000Z", "workordernumber": "GFP-202608270HCV0T-2", "partner": "TESCO", "channel": "IPG", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, SALES ADMIN, DISPATCHER,", "threewaynotes": "9278803587|SUBS UNCONTACTED-RINGING ONLY, ALREADY TEXTED THE SUBS BUT NO RESPONSE|COOR BY DISP CYBELLE, SALES ADMIN SHIENA AND BDE CLAIRE|CALLTHRU 4:00PM DELAY UNIQUE ID:8a3f8af8", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 11, "timestamp": "2026-08-29T17:24:01.000Z", "workordernumber": "GFP-202608294BOEF4-2", "partner": "EBISU", "channel": "STORE", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN,", "threewaynotes": "9177770233|SUBS UNCONTACTED-CALL WENT DIRECTLY TO VOICEMAIL, TEXTED THE SUBS BUT NO RESPONSE|COOR BY DISP CYBELLE,OM NELSON AND STORE ADMIN GEM|CALLTHRU 4:00PM\nb19f3764", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 12, "timestamp": "2026-08-29T17:22:35.000Z", "workordernumber": "GFP-2026082773OSJF-2", "partner": "EBISU", "channel": "IPG", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, SUBS,", "threewaynotes": "Unique ID: 7046e6d5\n9972531552|RESCHED BY SUBS TOMORROW, AS PER SUBS BALIKAN NALANG BUKAS|COOR BY SUBS,DISP CYBELLE AND BDE CLAIRE|CALLTHRU 4:30PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 13, "timestamp": "2026-08-29T17:19:33.000Z", "workordernumber": "GFP-202608287PVET1-2", "partner": "EBISU", "channel": "STORE", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN, SUBS,", "threewaynotes": "Unique ID: e5225625\n9167630951|FOR REVISIT TOM, AS PER SUBS BALIKAN NYO NALANG AKO BUKAS|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN GEM|VISITED 4:00PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 14, "timestamp": "2026-08-29T16:32:47.000Z", "workordernumber": "GFP-202608284GDQ5K-2", "partner": "EBISU", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, SUBS,", "threewaynotes": "9619487225|NOT VALID FOR DEVIATION DUE TO OVS OF 900M AND NO NEAREST NAP AVAILABLE ONSITE AND PRONE TO REPAIR, SUBS LONGLAT:9.287171 123.292840 NAP:9.288914 123.292527|COOR BY SUBS,DISP CYBELLE AND BDE CLAIRE VISITED 1:20PM fff5a83b", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 15, "timestamp": "2026-08-29T14:52:00.000Z", "workordernumber": "GFP-2026082903FZEJ-2", "partner": "EBISU", "channel": "STORE", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN, SUBS,", "threewaynotes": "9241842769|NOT VALID FOR DEVIATION DUE TO OVS OF 800M WITH NEAREST NAP BUT FULL PORTS ONSITE VAL_701_L906_N02 , OBSTRUCTION OF TREES AND PRONE TO REPAIR SUBS LATLONG:9.2866N,123.2430E NAP:9.283324,123.246715|COOR BY SUBS, DISP CYBELLE AND STORE ADMIN GEM|VISITED 2:10PM\n3711956c", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 16, "timestamp": "2026-08-29T11:27:00.000Z", "workordernumber": "GFP-202608282LVTFN-2", "partner": "EBISU", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, SUBS, SALES ADMIN,", "threewaynotes": "9750486926|NOT VALID FOR DEVIATION DUE TO OVS OF 1.4KM WITH NEAREST NAP BUT FULLPORTS ONSITE DTE_705_L901_N01-N03 AND PRONE TO REPAIR, SUBS LONGLAT: 9.3034,123.2893 NAP:9.3000188,123.294735|COOR BY SUBS,DISP CYBELLE AND EBISU ADMIN MARIA|VISITED 9:30AM\n58506932", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 17, "timestamp": "2026-08-29T09:19:11.000Z", "workordernumber": "GFP-2026082709ACGK-2", "partner": "TESCO", "channel": "IPG", "delay": "HRSEC - HIGH RISK SECURITY REASON", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "BAYLON 8:30AM VISITED 9533443186 COOR WITH Robert Callao SUBS HSREC-HIGH RISK SECURITY REASON-CANCEL DUE TO WRONG ADDRESS/SUBS CORRECT ADDPurok apitong Near barangay hall, TUBTUBON SIBULAN DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 18, "timestamp": "2026-08-30T11:27:10.000Z", "workordernumber": "GFP-2026082996W3U6-2", "partner": "EBISU", "channel": "STORE", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, STORE ADMIN, SUBS,", "threewaynotes": "9983043797|NOT VALID FOR DEVIATION DUE TO OVS OF 1KM , OBSTRUCTION OF TREES AND PRONE TO REPAIR AND NO NEAREST NAP AVAILABLE ONSITE|COOR BY SUBS,DISP CYBELLE AND STORE ADMIN JORDAN|VISITED 10:50AM\nUNIQUE ID b6f35afa", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 19, "timestamp": "2026-08-30T11:29:14.000Z", "workordernumber": "776438946A", "partner": "EBISU", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, SUBS,", "threewaynotes": "9649007337|NOT VALID FOR DEVIATION DUE TO OVS OF 2KM AND NO NEAREST NAP AVAILABLE ONSITE SUBS LATLONG:9.232653,123.258178 NAP 9.248239,123.295791|COOR BY SUBS, DISP CYBELLE AND BDE CLAIRE|VISITED 10:00AM ea6365f6", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 20, "timestamp": "2026-09-01T09:38:39.000Z", "workordernumber": "GFP-2026083194QY3W-2", "partner": "TESCO", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "BAYLON 8:20AM CALTRU 9369224416 COOR WITH MARIA ROSANA CORITICO SUBS RESCHED BY SUBS ON SEPTEMBER 11, 2026 DUE TO SUBS OUT OF TOWN, AS PER SUBS PABALIKAN LANG CYA NEXT WEEK DONE 3WAY CALL WITH BDE CLAIRE, OM NOEL AND FO NORMAND", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 21, "timestamp": "2026-09-02T17:14:37.000Z", "workordernumber": "GFP-202609012YGL2R-2", "partner": "EBISU", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, SUBS, SALES ADMIN,", "threewaynotes": "9361718171|RESCHED BY SUBS TOM DUE TO UNAVAILABLE, AS PER SUBS BALIKAN NALANG AKO BUKAS|COOR BY SUBS,DISP CYBELLE AND EBISU SALES ADMIN MARIA|CALLTHRU 4:10PM\nUNIQUE ID 9361718171|RESCHED BY SUBS TOM DUE TO UNAVAILABLE, AS PER SUBS BALIKAN NALANG AKO BUKAS|COOR BY SUBS,DISP CYBELLE AND EBISU SALES ADMIN MARIA|CALLTHRU 4:10PM\n\nUNIQUE ID bf11612d", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 22, "timestamp": "2026-09-01T11:35:38.000Z", "workordernumber": "776668062A", "partner": "EBISU", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, SUBS,", "threewaynotes": "9318268397|RESCHED TOM DUE TO SUBS NOT AROUND, AS PER SUBS BALIKAN NALANG BUKAS|COOR BY SUBS,DISP CYBELLE AND BDE CLAIRE|VISITED 10:32AM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 23, "timestamp": "2026-09-02T09:44:26.000Z", "workordernumber": "776756567A", "partner": "TESCO", "channel": "", "delay": "HRSAFE-HIGH RISK SAFETY REASON", "delaydateandtime": null, "with3waynotes": false, "person3wayed": "", "threewaynotes": "BAYLON 8:10AM VISITED 9303616177 COOR WITH minie rose estoconing SUBS NOT VALID FOR DEVIATION DUE TO HIGH RISK CROSSING 4 LANES PRONE TO REPAIR Longlat: 9.347315, 123.272228 DONE 3WAY CALL WITH", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 24, "timestamp": "2026-09-02T09:47:51.000Z", "workordernumber": "GFP-2026090198R1SG-2", "partner": "TESCO", "channel": "", "delay": "CNPA - NO POLE ATTACHED", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "BAYLON 8:45AM VISITED COOR WITH Elmer Magalso SUBS NOT VALID FOR DEVIATION DUE TO NO POLE ATTACHED AND CROSSING MULTIPLE PRIVATE PROPERTIES Longlat:9.347143, 123.291350 DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 25, "timestamp": "2026-09-02T09:50:49.000Z", "workordernumber": "GFP-202609017QGQ21-2", "partner": "TESCO", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "BAYLON 9:20AM 9977590142 COOR WITH LADY AUBREY BACO SUBS RESCHED BY SUBS ON FRIDAY DUE TO BUSY SCHEDULE, AS PER SUBS IPAPA SCHED LANG NILA KASI BUSY PO SILA SA NGAYON DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 26, "timestamp": "2026-09-02T09:56:39.000Z", "workordernumber": "GFP-202609017CVRGK-2", "partner": "TESCO", "channel": "", "delay": "HRSAFE-HIGH RISK SAFETY REASON", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "CANADILLA 8:20AM CALLTRU 9935752632 COOR WITH Jesrael Brett Libaton SUBS HSREC-HIGH RISK SECURITY REASON -CANCEL FOR RE ENCODE DUE TO NO SALES CODE INDICATED ON THE JO COOR WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 27, "timestamp": "2026-09-02T13:50:20.000Z", "workordernumber": "GFP-202609017KD5D7-2", "partner": "TESCO", "channel": "IPG", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "DANOSO 1PM VISITED 9244146409 COOR WITH Julius Fernandez SUBS/RESCHED BY SUBS ON FRIDAY DUE TO SUBS NEED PERMISSION FOR THE PRIVATE SPOT POLE OWNER, AS PER SUBS PABALIKAN AT TATAWAG NALANG PO CYA DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 28, "timestamp": "2026-09-02T13:51:04.000Z", "workordernumber": "GLS-3846837845-2", "partner": "TESCO", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "CANADILLA 1PM VISITED 9478810095 COOR WITH konstantin markov atsev SUBS NOT VALID FOR DEVIATION DUE TO ASSIGNED NAP IS OVERSPANS OF 1.5KM AND NEAREST NAPS ARE FULL TJY_701_L912_N02A/TJY_701_L912_N03A/TJY_701_L912_N04A LATLONG:9.50815,123.151383 DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 29, "timestamp": "2026-09-02T13:51:31.000Z", "workordernumber": "GFP-202609024NE8QV-2", "partner": "TESCO", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, OM, FEE,", "threewaynotes": "CANADILLA 1:20PM VISITED 9652307664 COOR WITH Nico Angelo Villegas SUBS NOT VALID FOR DEVIATION DUE TO ASSIGNED NAP IS OVERSPANS OF 1KM AND NEAREST NAPS ARE FULL TJY_701_L912_N02A/TJY_701_L912_N03A/TJY_701_L912_N04A LATLONG:9.511272,123.150766 DONE 3WAY CALL WITH BDE CLAIRE, FO NORMAND AND OM NOEL", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 30, "timestamp": "2026-09-02T15:50:46.000Z", "workordernumber": "GFP-202609025T4PHS-2", "partner": "TESCO", "channel": "", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "SUBS, SALES ADMIN,", "threewaynotes": "9617595363|NOT VALID FOR DEVIATION DUE TO OVS OF 1KM, NO POLE ATTACHED , OBSTRUCTION OF TREES , NO NEAREST NAP AVAILABLE AND PRONE TO REPAIR SUBS LATLONG:9.337791,123.271956 NAP: 9.3455138 123.2824472 |COOR BY SUBS,EBISU SALES AGENT RUTCHELYN AND EBISU SALES ADMIN MARIA|VISITED 2:43PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 31, "timestamp": "2026-09-02T15:55:38.000Z", "workordernumber": "GFP-202609017BIF0E-2", "partner": "EBISU", "channel": "IPG", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER,", "threewaynotes": "Wendy Ybanez\n\n9760434113|SUBS UNCONTACTED-CANNOT BE REACH, NO OTHER CONTACT NUMBER AND CANT LOCATE|COOR BY DISP CYBELLE,IPG SALES ADMIN SHEINA AND BDE CLAIRE|CALLTHRU 3:00PM\nUnique ID: 7d23cbb5", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 32, "timestamp": "2026-09-02T16:04:58.000Z", "workordernumber": "GFP-202609014K7FM9-2", "partner": "EBISU", "channel": "IPG", "delay": "COVS-OVERSPAN-NO NEAREST FACILITY", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, SALES ADMIN, SUBS,", "threewaynotes": "9628192274|NOT VALID FOR DEVIATION DUE TO OVS OF 1.3KM, NO NEAREST AVAILABLE ONSITE AND HIGHRISK OBSTRUCTION OF TREES PRONE TO REPAIR|COOR BY SUBS,IPG SALES ADMIN SHIENA AND BDE CLAIRE|VISITED1:02PM\nUNIQUE ID b986274b", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 33, "timestamp": "2026-09-02T16:07:34.000Z", "workordernumber": "GFP-202609017FN8IB-2", "partner": "TESCO", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "DISPATCHER, SUBS,", "threewaynotes": "9940815767|RESCHED TOM, AS PER SUBS BALIKAN NYO NALANG AKO BUKAS NANG UMAGA|COOR BY SUBS,DISP CYBELLE AND EBISU MARIA|CALLTHRU 3:20PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 34, "timestamp": "2026-09-02T16:10:12.000Z", "workordernumber": "GLS-3453638490-2", "partner": "EBISU", "channel": "", "delay": "(X) CRES - RESKED WITH PREFERRED DATE", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, DISPATCHER, SUBS,", "threewaynotes": "Unique ID: 43b54153\nfranklin angot\n\n9632178187|RESCHED TOM FOR VISIT DUE TO SUBS NOT AVAILABLE, AS PER SUBS BALIKAN NALANG AKO BUKAS|COOR BY SUBS,DISP CYBELLE AND BDE CLAIRE|CALLTHRU 3:30PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 35, "timestamp": "2026-09-02T16:12:52.000Z", "workordernumber": "GFP-202609011EEH7J-2", "partner": "TESCO", "channel": "IPG", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, SALES ADMIN, DISPATCHER,", "threewaynotes": "Glenda Almenzo\n\n9067189220|SUBS UNCONTACT-RINGING ONLY, NO OTHER CONTACT NUMBER,ALREADY TEXTED BUT NO RESPONSE |COOR BY DISP CYBELLE,IPG SALES ADMIN SHIENA AND BDE CLAIRE|CALLTHRU 3:45PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null},
+  {"id": 36, "timestamp": "2026-09-02T16:13:18.000Z", "workordernumber": "GFP-202609018BJACJ-2", "partner": "TESCO", "channel": "IPG", "delay": "CANT LOCATE SUBSCRIBER", "delaydateandtime": null, "with3waynotes": true, "person3wayed": "BDE, SALES ADMIN, DISPATCHER,", "threewaynotes": "Daisy Villanueva\n\n9531133296|SUBS UNCONTACTED-CANNOT BE REACH, NO OTHER CONTACT NUMBER, ALREADY TEXTED THE SUBS BUT NO RESPONSE|COOR BY DISP CYBELLE, IPG SALES ADMIN SHIENA AND BDE CLAIRE|CALLTHRU 4:00PM", "status": "DELAYED", "bderemarks": "", "approverEmail": null, "actionTakenAt": null}
 ];
+
+const json = (res, status, body) => {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(body));
+};
+
+const nextId = () => memoryRequests.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
 
 module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
-    return res.status(200).json(memoryRequests);
+    return json(res, 200, memoryRequests);
   }
 
   if (req.method === 'POST') {
-    const { workordernumber, partner, channel, with3waynotes, person3wayed, threewaynotes } = req.body || {};
+    const b = req.body || {};
     const newRequest = {
-      id: memoryRequests.length + 1,
+      id: nextId(),
       timestamp: new Date().toISOString(),
-      workordernumber, partner, channel, delay: "", delaydateandtime: null,
-      with3waynotes: Boolean(with3waynotes), person3wayed: person3wayed || "", threewaynotes: threewaynotes || "",
-      status: "PENDING", bderemarks: "", approverEmail: null, actionTakenAt: null
+      workordernumber: b.workordernumber || '',
+      partner: b.partner || '',
+      channel: b.channel || '',
+      delay: b.delay || '',
+      delaydateandtime: b.delaydateandtime || null,
+      with3waynotes: Boolean(b.with3waynotes),
+      person3wayed: b.person3wayed || '',
+      threewaynotes: b.threewaynotes || '',
+      status: 'PENDING',
+      bderemarks: b.bderemarks || '',
+      approverEmail: b.approverEmail || null,
+      actionTakenAt: null
     };
     memoryRequests.unshift(newRequest);
-    return res.status(201).json(newRequest);
+    return json(res, 201, newRequest);
   }
 
-  return res.status(405).json({ error: "Method Not Allowed" });
+  if (req.method === 'PATCH') {
+    const match = (req.url || '').match(/\/api\/requests\/(\d+)\/action$/);
+    if (!match) return json(res, 404, { error: 'Not found' });
+    const id = parseInt(match[1], 10);
+    const item = memoryRequests.find(r => r.id === id);
+    if (!item) return json(res, 404, { error: 'Not found' });
+    const b = req.body || {};
+    if (b.status) item.status = b.status;
+    item.bderemarks = b.bderemarks !== undefined ? (b.bderemarks || '') : item.bderemarks;
+    if (b.delaydateandtime !== undefined) item.delaydateandtime = b.delaydateandtime || null;
+    item.approverEmail = b.approverEmail || item.approverEmail || 'cpjuezan@globe.com.ph';
+    item.actionTakenAt = new Date().toISOString();
+    return json(res, 200, item);
+  }
+
+  return json(res, 405, { error: 'Method Not Allowed' });
 };

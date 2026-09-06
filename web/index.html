@@ -9,107 +9,180 @@
 <body class="bg-gray-100 font-sans text-gray-800">
   <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
-      <div>
-        <h1 class="text-xl font-bold">Delay Order Validation — Dispatcher Portal</h1>
-        <p class="text-xs text-blue-200">Work Order Approval & Delay Tracking</p>
-      </div>
-      <span class="bg-blue-800 text-xs px-3 py-1 rounded-full border border-blue-700">Dispatcher Portal</span>
-    </header>
-
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Submission Form -->
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-1">
-        <h2 class="text-lg font-semibold border-b pb-3 mb-4 text-blue-900">New Work Order Request</h2>
-        
-        <div id="alertMessage" class="hidden mb-4 p-3 rounded text-sm font-medium"></div>
-
-        <form id="requestForm" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">WORK ORDER NUMBER *</label>
-            <input type="text" id="workordernumber" required placeholder="e.g. WO-10029" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PARTNER *</label>
-            <select id="partner" required class="w-full p-2 border rounded-md text-sm bg-white">
-              <option value="Ebisu">Ebisu</option>
-              <option value="TESCO">TESCO</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">CHANNEL *</label>
-            <select id="channel" required class="w-full p-2 border rounded-md text-sm bg-white">
-              <option value="Online">Online</option>
-              <option value="Ebisu">Ebisu</option>
-              <option value="IPG">IPG</option>
-              <option value="Tesco">Tesco</option>
-              <option value="WMC">WMC</option>
-            </select>
-          </div>
-
-          <div class="border-t pt-3">
-            <label class="flex items-center space-x-2 text-sm font-semibold cursor-pointer">
-              <input type="checkbox" id="with3waynotes" class="rounded text-blue-600 w-4 h-4">
-              <span>WITH 3 WAY NOTES</span>
-            </label>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PERSON 3 WAYED</label>
-            <input type="text" id="person3wayed" placeholder="Name of subscriber / contact" class="w-full p-2 border rounded-md text-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">3 WAY NOTES</label>
-            <textarea id="threewaynotes" rows="3" placeholder="Specific name, numbers, actual reason of subscriber..." class="w-full p-2 border rounded-md text-sm"></textarea>
-          </div>
-
-          <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-md shadow transition flex justify-center items-center">
-            <span>Submit Request</span>
-          </button>
-        </form>
-      </div>
-
-      <!-- Requests Status Board -->
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2 flex flex-col">
-        <div class="flex justify-between items-center border-b pb-3 mb-4">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900">Submitted Requests & Live Status</h2>
-            <p class="text-xs text-gray-500">Auto-refreshes every 3 seconds</p>
-          </div>
-          <button onclick="fetchRequests()" class="text-xs bg-gray-100 hover:bg-gray-200 border px-3 py-1.5 rounded font-semibold text-gray-700 flex items-center space-x-1">
+    <header class="bg-blue-900 text-white p-4 shadow-md">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div>
+          <h1 class="text-xl font-bold">Delay Order Validation — Dispatcher Portal</h1>
+          <p class="text-xs text-blue-200">Work Order Approval &amp; Delay Tracking</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="bg-blue-800 text-xs px-3 py-1 rounded-full border border-blue-700">Dispatcher Portal</span>
+          <button onclick="fetchRequests()" class="text-xs bg-white/10 hover:bg-white/20 border border-blue-600 px-3 py-1.5 rounded font-semibold flex items-center space-x-1">
             <span>↻ Refresh</span>
           </button>
         </div>
+      </div>
+    </header>
 
-        <div class="overflow-x-auto flex-1">
-          <table class="w-full text-left text-sm border-collapse">
-            <thead class="bg-gray-50 border-b text-gray-600 uppercase text-xs">
-              <tr>
-                <th class="p-3">WO #</th>
-                <th class="p-3">PARTNER</th>
-                <th class="p-3">CHANNEL</th>
-                <th class="p-3">STATUS</th>
-                <th class="p-3">BDE REMARKS / APPROVER</th>
-                <th class="p-3">TIMESTAMP</th>
-              </tr>
-            </thead>
-            <tbody id="requestsTableBody">
-              <tr>
-                <td colspan="6" class="p-4 text-center text-gray-400">Loading requests...</td>
-              </tr>
-            </tbody>
-          </table>
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+      <!-- Alert -->
+      <div id="alertMessage" class="hidden mb-4 p-3 rounded text-sm font-medium"></div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs font-bold text-gray-500 uppercase">Total Orders</div>
+          <div id="statTotal" class="text-3xl font-extrabold text-gray-900 mt-1">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs font-bold text-gray-500 uppercase">Pending Action</div>
+          <div id="statPending" class="text-3xl font-extrabold text-amber-500 mt-1">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs font-bold text-gray-500 uppercase">Delayed</div>
+          <div id="statDelayed" class="text-3xl font-extrabold text-orange-500 mt-1">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs font-bold text-gray-500 uppercase">EBISU</div>
+          <div id="statEbisu" class="text-3xl font-extrabold text-blue-600 mt-1">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs font-bold text-gray-500 uppercase">TESCO</div>
+          <div id="statTesco" class="text-3xl font-extrabold text-purple-600 mt-1">0</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Submission Form -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-1 h-fit">
+          <h2 class="text-lg font-semibold border-b pb-3 mb-4 text-blue-900">New Work Order Request</h2>
+
+          <form id="requestForm" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">WORK ORDER NUMBER *</label>
+              <input type="text" id="workordernumber" required placeholder="e.g. WO-10029" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PARTNER *</label>
+              <select id="partner" required class="w-full p-2 border rounded-md text-sm bg-white">
+                <option value="EBISU">EBISU</option>
+                <option value="TESCO">TESCO</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">CHANNEL *</label>
+              <select id="channel" required class="w-full p-2 border rounded-md text-sm bg-white">
+                <option value="">— Select —</option>
+                <option value="Online">Online</option>
+                <option value="IPG">IPG</option>
+                <option value="STORE">STORE</option>
+                <option value="WMC">WMC</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">DELAY REASON *</label>
+              <select id="delay" required class="w-full p-2 border rounded-md text-sm bg-white">
+                <option value="">— Select —</option>
+                <option value="CANT LOCATE SUBSCRIBER">CANT LOCATE SUBSCRIBER</option>
+                <option value="(X) CRES - RESKED WITH PREFERRED DATE">(X) CRES - RESKED WITH PREFERRED DATE</option>
+                <option value="COVS-OVERSPAN-NO NEAREST FACILITY">COVS-OVERSPAN-NO NEAREST FACILITY</option>
+                <option value="HRSAFE-HIGH RISK SAFETY REASON">HRSAFE-HIGH RISK SAFETY REASON</option>
+                <option value="HRSEC - HIGH RISK SECURITY REASON">HRSEC - HIGH RISK SECURITY REASON</option>
+                <option value="CNPA - NO POLE ATTACHED">CNPA - NO POLE ATTACHED</option>
+              </select>
+            </div>
+
+            <div class="border-t pt-3">
+              <label class="flex items-center space-x-2 text-sm font-semibold cursor-pointer">
+                <input type="checkbox" id="with3waynotes" class="rounded text-blue-600 w-4 h-4">
+                <span>WITH 3 WAY NOTES</span>
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PERSON 3 WAYED</label>
+              <input type="text" id="person3wayed" placeholder="Name(s) of contact / roles 3-wayed" class="w-full p-2 border rounded-md text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">3 WAY NOTES</label>
+              <textarea id="threewaynotes" rows="3" placeholder="Specific name, numbers, actual reason of subscriber..." class="w-full p-2 border rounded-md text-sm"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-md shadow transition flex justify-center items-center">
+              <span>Submit Request</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Requests Status Board -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2 flex flex-col min-w-0">
+          <div class="flex justify-between items-center border-b pb-3 mb-4 flex-wrap gap-2">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Submitted Requests &amp; Live Status</h2>
+              <p class="text-xs text-gray-500">Auto-refreshes every 5 seconds</p>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <input type="text" id="searchFilter" placeholder="Search WO #, person, notes..." class="p-2 border rounded-md text-sm flex-1 min-w-[180px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <select id="partnerFilter" class="p-2 border rounded-md text-sm bg-white"></select>
+            <select id="channelFilter" class="p-2 border rounded-md text-sm bg-white"></select>
+            <select id="statusFilter" class="p-2 border rounded-md text-sm bg-white"></select>
+            <select id="delayFilter" class="p-2 border rounded-md text-sm bg-white"></select>
+            <button id="clearFilters" class="text-xs bg-gray-100 hover:bg-gray-200 border px-3 py-2 rounded font-semibold text-gray-700">✕ Clear</button>
+          </div>
+
+          <div class="overflow-x-auto flex-1 -mx-6 px-6">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead class="bg-gray-50 border-b text-gray-600 uppercase text-xs sticky top-0">
+                <tr>
+                  <th class="p-3 whitespace-nowrap">WO #</th>
+                  <th class="p-3 whitespace-nowrap">PARTNER</th>
+                  <th class="p-3 whitespace-nowrap">CHANNEL</th>
+                  <th class="p-3 whitespace-nowrap">DELAY REASON</th>
+                  <th class="p-3 whitespace-nowrap">STATUS</th>
+                  <th class="p-3 whitespace-nowrap">3 WAY</th>
+                  <th class="p-3 whitespace-nowrap">BDE REMARKS / APPROVER</th>
+                  <th class="p-3 whitespace-nowrap">DATE &amp; TIME</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody">
+                <tr>
+                  <td colspan="8" class="p-4 text-center text-gray-400">Loading requests...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
   <script>
-    // Use relative path for seamless Vercel / Local compatibility
     const API_URL = '/api/requests';
+    let allRequests = [];
+
+    const statusBadges = {
+      PENDING: 'bg-amber-100 text-amber-800 border-amber-300',
+      APPROVED: 'bg-green-100 text-green-800 border-green-300',
+      DISAPPROVED: 'bg-red-100 text-red-800 border-red-300',
+      DELAYED: 'bg-orange-100 text-orange-800 border-orange-300',
+      CANCELLED: 'bg-gray-100 text-gray-800 border-gray-300'
+    };
+
+    const delayBadges = {
+      'CANT LOCATE SUBSCRIBER': 'bg-red-50 text-red-700 border-red-200',
+      '(X) CRES - RESKED WITH PREFERRED DATE': 'bg-amber-50 text-amber-700 border-amber-200',
+      'COVS-OVERSPAN-NO NEAREST FACILITY': 'bg-purple-50 text-purple-700 border-purple-200',
+      'HRSAFE-HIGH RISK SAFETY REASON': 'bg-orange-50 text-orange-700 border-orange-200',
+      'HRSEC - HIGH RISK SECURITY REASON': 'bg-orange-50 text-orange-700 border-orange-200',
+      'CNPA - NO POLE ATTACHED': 'bg-blue-50 text-blue-700 border-blue-200'
+    };
 
     function showAlert(msg, isError = false) {
       const alert = document.getElementById('alertMessage');
@@ -119,48 +192,127 @@
       setTimeout(() => alert.classList.add('hidden'), 4000);
     }
 
+    function fillUniqueOptions(selectId, values, label) {
+      const sel = document.getElementById(selectId);
+      const current = sel.value;
+      const set = [...new Set(values.filter(v => v).map(v => v.trim()))].sort();
+      sel.innerHTML = `<option value="">All ${label}</option>` + set.map(v => `<option value="${v}">${v}</option>`).join('');
+      sel.value = current;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return isNaN(d) ? ts : d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function render(data) {
+      const q = document.getElementById('searchFilter').value.trim().toLowerCase();
+      const pf = document.getElementById('partnerFilter').value;
+      const cf = document.getElementById('channelFilter').value;
+      const sf = document.getElementById('statusFilter').value;
+      const df = document.getElementById('delayFilter').value;
+
+      const filtered = data.filter(it => {
+        if (pf && it.partner !== pf) return false;
+        if (cf && (it.channel || '') !== cf) return false;
+        if (sf && it.status !== sf) return false;
+        if (df && it.delay !== df) return false;
+        if (q) {
+          const haystack = [it.workordernumber, it.person3wayed, it.threewaynotes, it.bderemarks, it.delay]
+            .join(' ').toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const stat = (id, val) => { document.getElementById(id).innerText = val; };
+      stat('statTotal', filtered.length);
+      stat('statPending', filtered.filter(r => r.status === 'PENDING').length);
+      stat('statDelayed', filtered.filter(r => r.status === 'DELAYED').length);
+      stat('statEbisu', filtered.filter(r => (r.partner || '').toUpperCase() === 'EBISU').length);
+      stat('statTesco', filtered.filter(r => (r.partner || '').toUpperCase() === 'TESCO').length);
+
+      const tbody = document.getElementById('requestsTableBody');
+      tbody.innerHTML = '';
+
+      if (!Array.isArray(data) || filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-400">No work order requests found.</td></tr>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const statusBadge = statusBadges[item.status] || 'bg-gray-100 text-gray-700 border-gray-200';
+        const delayBadge = delayBadges[item.delay] || 'bg-gray-50 text-gray-700 border-gray-200';
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-50 align-top';
+        row.innerHTML = `
+          <td class="p-3 font-bold text-gray-900 whitespace-nowrap">${item.workordernumber || '—'}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${(item.partner || '').toUpperCase() === 'EBISU' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'} font-semibold whitespace-nowrap">${item.partner || '—'}</span></td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-semibold whitespace-nowrap">${item.channel || '—'}</span></td>
+          <td class="p-3 whitespace-nowrap"><span class="px-2 py-1 rounded text-xs font-semibold border ${delayBadge}">${item.delay || '—'}</span></td>
+          <td class="p-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}">${item.status}</span></td>
+          <td class="p-3 text-xs max-w-[260px]">
+            <div class="font-medium text-gray-800 flex items-center gap-1 flex-wrap">
+              <span>${item.person3wayed || '—'}</span>
+              ${item.with3waynotes ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">3-WAY</span>' : ''}
+            </div>
+            ${item.threewaynotes ? `<div class="text-gray-400 mt-1 line-clamp-3 whitespace-pre-line" title="${item.threewaynotes.replace(/"/g, '&quot;')}">${esc(item.threewaynotes)}</div>` : ''}
+          </td>
+          <td class="p-3 text-xs">
+            ${item.bderemarks ? `<div class="font-medium text-gray-800 whitespace-pre-line">${esc(item.bderemarks)}</div>` : '<span class="text-gray-400">—</span>'}
+            ${item.approverEmail ? `<div class="text-gray-400 text-[10px] mt-0.5">By: ${item.approverEmail}</div>` : ''}
+          </td>
+          <td class="p-3 text-xs text-gray-500 whitespace-nowrap">${formatDate(item.timestamp)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function buildFilterOptions() {
+      fillUniqueOptions('partnerFilter', allRequests.map(r => r.partner), 'Partners');
+      fillUniqueOptions('channelFilter', allRequests.map(r => r.channel), 'Channels');
+      fillUniqueOptions('delayFilter', allRequests.map(r => r.delay), 'Delay Reasons');
+      const sel = document.getElementById('statusFilter');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">All Status</option>' +
+        ['PENDING', 'APPROVED', 'DISAPPROVED', 'DELAYED', 'CANCELLED'].map(v => `<option value="${v}">${v}</option>`).join('');
+      sel.value = current;
+    }
+
     async function fetchRequests() {
       try {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const tbody = document.getElementById('requestsTableBody');
-        tbody.innerHTML = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">No work order requests submitted yet.</td></tr>';
-          return;
+        if (Array.isArray(data)) {
+          allRequests = data;
+          buildFilterOptions();
+          render(data);
         }
-
-        data.forEach(item => {
-          const badgeColor = {
-            PENDING: 'bg-amber-100 text-amber-800 border-amber-300',
-            APPROVED: 'bg-green-100 text-green-800 border-green-300',
-            DISAPPROVED: 'bg-red-100 text-red-800 border-red-300',
-            DELAYED: 'bg-orange-100 text-orange-800 border-orange-300',
-            CANCELLED: 'bg-gray-100 text-gray-800 border-gray-300'
-          }[item.status] || 'bg-gray-100';
-
-          const row = document.createElement('tr');
-          row.className = 'border-b hover:bg-gray-50';
-          row.innerHTML = `
-            <td class="p-3 font-bold text-gray-900">${item.workordernumber || item.work_order_number}</td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-700 font-semibold">${item.partner}</span></td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-purple-50 text-purple-700 font-semibold">${item.channel}</span></td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor}">${item.status}</span></td>
-            <td class="p-3 text-xs">
-              ${item.bderemarks || item.bde_remarks ? `<div class="font-medium text-gray-800">${item.bderemarks || item.bde_remarks}</div>` : '<span class="text-gray-400">—</span>'}
-              ${item.delaydateandtime || item.delay_date_and_time ? `<div class="text-orange-600 font-semibold mt-0.5">Delayed To: ${new Date(item.delaydateandtime || item.delay_date_and_time).toLocaleString()}</div>` : ''}
-              ${item.approverEmail || item.approver_email ? `<div class="text-gray-400 text-[10px]">By: ${item.approverEmail || item.approver_email}</div>` : ''}
-            </td>
-            <td class="p-3 text-xs text-gray-500">${new Date(item.timestamp).toLocaleString()}</td>
-          `;
-          tbody.appendChild(row);
-        });
       } catch (err) {
         console.error('Fetch requests error:', err);
       }
     }
+
+    ['searchFilter', 'partnerFilter', 'channelFilter', 'statusFilter', 'delayFilter'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('change', () => render(allRequests));
+      if (id === 'searchFilter') el.addEventListener('input', () => render(allRequests));
+    });
+
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      ['searchFilter', 'partnerFilter', 'channelFilter', 'statusFilter', 'delayFilter'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      render(allRequests);
+    });
 
     document.getElementById('requestForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -173,9 +325,10 @@
           workordernumber: document.getElementById('workordernumber').value,
           partner: document.getElementById('partner').value,
           channel: document.getElementById('channel').value,
+          delay: document.getElementById('delay').value,
           with3waynotes: document.getElementById('with3waynotes').checked,
           person3wayed: document.getElementById('person3wayed').value,
-          threewaynotes: document.getElementById('threewaynotes').value,
+          threewaynotes: document.getElementById('threewaynotes').value
         };
 
         const res = await fetch(API_URL, {
@@ -198,7 +351,7 @@
     });
 
     fetchRequests();
-    setInterval(fetchRequests, 3000);
+    setInterval(fetchRequests, 5000);
   </script>
 </body>
 </html>
