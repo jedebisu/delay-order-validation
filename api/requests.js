@@ -83,9 +83,10 @@ module.exports = (req, res) => {
   }
 
   if (req.method === 'PATCH') {
-    const match = (req.url || '').match(/\/api\/requests\/(\d+)\/action$/);
-    if (!match) return json(res, 404, { error: 'Not found' });
-    const id = parseInt(match[1], 10);
+    const queryId = parseInt((req.query || {}).id, 10);
+    const pathMatch = (req.url || '').match(/\/api\/requests\/(\d+)\/action(\?|$)/);
+    const id = queryId || (pathMatch ? parseInt(pathMatch[1], 10) : NaN);
+    if (isNaN(id)) return json(res, 404, { error: 'Not found' });
     const item = memoryRequests.find(r => r.id === id);
     if (!item) return json(res, 404, { error: 'Not found' });
     const b = req.body || {};
