@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="ic_launcher_background">#131E7D</color>
     <color name="status_pending">#B45309</color>
     <color name="status_approved">#15803D</color>
     <color name="status_disapproved">#B91C1C</color>

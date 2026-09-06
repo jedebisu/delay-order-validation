@@ -5,7 +5,9 @@
 
     <application
         android:allowBackup="true"
-        android:label="Order Approver"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar"
         android:usesCleartextTraffic="true">
