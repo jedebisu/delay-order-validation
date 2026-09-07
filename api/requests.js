@@ -51,7 +51,7 @@ const nextId = () => memoryRequests.reduce((max, r) => Math.max(max, r.id || 0),
 
 // Google Sheets mirror. Fill in SHEETS_WEBHOOK_URL with the Apps Script web app
 // URL after it's deployed (paste the "Web app URL", ending in /exec).
-const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxxMhjrwr5dCvHbJU_OlDykrlMxuC5Y-O-yBFLwg-nS0rRJbd7cJXiZgovyH8D-vpOj/exec';
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxSQfemrxLiHbydAPw4fu1nfSlwJenmi7CcXYANlHPTdp6YT0FtjtOerkzZJB7cdxUM/exec';
 
 const forwardToSheets = async (record) => {
   if (!SHEETS_WEBHOOK_URL) return;
