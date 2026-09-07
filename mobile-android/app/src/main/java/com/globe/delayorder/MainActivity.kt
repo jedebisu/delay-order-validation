@@ -1,8 +1,10 @@
 package com.globe.delayorder
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -39,7 +41,8 @@ import java.util.TimeZone
 class MainActivity : AppCompatActivity() {
 
     private val BASE_URL = "https://delay-order-validation.vercel.app/"
-    private val approverEmail = "cpjuezan@globe.com.ph"
+    private val DEFAULT_APPROVER_EMAIL = "cpjuezan@globe.com.ph"
+    private var approverEmail = DEFAULT_APPROVER_EMAIL
 
     private val gson = GsonBuilder()
         .setLenient()
@@ -63,6 +66,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnPending: MaterialButton
     private lateinit var btnAll: MaterialButton
 
+    private lateinit var txtSubtitle: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -72,12 +77,14 @@ class MainActivity : AppCompatActivity() {
         emptyText = findViewById(R.id.emptyText)
         btnPending = findViewById(R.id.btnPending)
         btnAll = findViewById(R.id.btnAll)
+        txtSubtitle = findViewById(R.id.txtSubtitle)
 
         adapter = RequestAdapter { request -> showActionDialog(request) }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
         findViewById<android.widget.Button>(R.id.btnRefresh).setOnClickListener { loadRequests() }
+        findViewById<android.widget.Button>(R.id.btnEmail).setOnClickListener { promptApproverEmail() }
 
         swipeRefresh.setOnRefreshListener { loadRequests() }
 
@@ -87,7 +94,48 @@ class MainActivity : AppCompatActivity() {
             render()
         }
 
+        loadApproverEmail()
+
+        if (!prefs().getBoolean("approverEmailSet", false)) {
+            promptApproverEmail()
+        }
+
         loadRequests()
+    }
+
+    private fun prefs() = getSharedPreferences("delay_order_prefs", Context.MODE_PRIVATE)
+
+    private fun loadApproverEmail() {
+        approverEmail = prefs().getString("approverEmail", DEFAULT_APPROVER_EMAIL) ?: DEFAULT_APPROVER_EMAIL
+        txtSubtitle.text = "Approver: $approverEmail"
+    }
+
+    private fun promptApproverEmail() {
+        val input = EditText(this)
+        input.setText(approverEmail)
+        input.hint = "your.user@globe.com.ph"
+        input.inputType = android.text.InputType.TYPE_CLASS_TEXT or
+            android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        AlertDialog.Builder(this)
+            .setTitle("Approver email")
+            .setMessage("Your actions are recorded under this email. Change it here if you are a different approver.")
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val email = input.text.toString().trim()
+                if (email.isNotBlank()) {
+                    prefs().edit()
+                        .putString("approverEmail", email)
+                        .putBoolean("approverEmailSet", true)
+                        .apply()
+                    loadApproverEmail()
+                    Toast.makeText(this, "Approver email set to $email", Toast.LENGTH_LONG).show()
+                } else {
+                    promptApproverEmail()
+                }
+            }
+            .setNegativeButton("Not now", null)
+            .setCancelable(true)
+            .show()
     }
 
     private fun loadRequests() {

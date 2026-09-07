@@ -31,6 +31,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/txtSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Work order approval &amp; delay tracking"
@@ -44,6 +45,14 @@
             android:layout_height="wrap_content"
             android:text="\u21BB"
             android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&#x270E;"
+            android:textSize="16sp"
+            android:contentDescription="Change approver email" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButtonToggleGroup
