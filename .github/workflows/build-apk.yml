@@ -23,21 +23,29 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build Android Debug APK
+      - name: Build Signed Release APK
+        env:
+          RELEASE_STORE_BASE64: ${{ secrets.RELEASE_STORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
         run: |
+          echo "$RELEASE_STORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           cd mobile-android
-          gradle assembleDebug
+          RELEASE_STORE_FILE="$RUNNER_TEMP/release.jks" \
+          RELEASE_STORE_PASSWORD="$RELEASE_STORE_PASSWORD" \
+          gradle assembleRelease
+          # Keep the familiar download filename so existing install links keep working.
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/app-debug.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: mobile-android/app/build/outputs/apk/debug/app-debug.apk
+          name: app-release
+          path: mobile-android/app/build/outputs/apk/release/app-release.apk
 
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
-          files: mobile-android/app/build/outputs/apk/debug/app-debug.apk
+          files: mobile-android/app/build/outputs/apk/release/app-debug.apk
           tag_name: v1.0.0
           name: "Delay Order Validation Approver APK v1.0.0"
           body: "Official Android APK release for Order Approver mobile application."

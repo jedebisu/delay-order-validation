@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+val repoProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val releaseStoreFile = System.getenv("RELEASE_STORE_FILE") ?: repoProps.getProperty("RELEASE_STORE_FILE")
+val releaseStorePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: repoProps.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+val releaseKeyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: repoProps.getProperty("RELEASE_KEY_ALIAS") ?: "delayorder"
 
 android {
     namespace = "com.globe.delayorder"
@@ -11,8 +21,8 @@ android {
         applicationId = "com.globe.delayorder"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.2"
+        versionCode = 5
+        versionName = "2.3"
     }
 
     compileOptions {
@@ -21,6 +31,24 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (releaseStoreFile != null && releaseStorePassword.isNotBlank()) {
+                storeFile = file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseStorePassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+        }
     }
 }
 
