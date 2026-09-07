@@ -49,7 +49,21 @@ const json = (res, status, body) => {
 
 const nextId = () => memoryRequests.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
 
-module.exports = (req, res) => {
+// Google Sheets mirror. Fill in SHEETS_WEBHOOK_URL with the Apps Script web app
+// URL after it's deployed (paste the "Web app URL", ending in /exec).
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxxMhjrwr5dCvHbJU_OlDykrlMxuC5Y-O-yBFLwg-nS0rRJbd7cJXiZgovyH8D-vpOj/exec';
+
+const forwardToSheets = async (record) => {
+  if (!SHEETS_WEBHOOK_URL) return;
+  await fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record),
+    signal: AbortSignal.timeout(4000)
+  });
+};
+
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -79,7 +93,8 @@ module.exports = (req, res) => {
       actionTakenAt: null
     };
     memoryRequests.unshift(newRequest);
-    return json(res, 201, newRequest);
+    json(res, 201, newRequest);
+    return forwardToSheets(newRequest).catch(() => {});
   }
 
   if (req.method === 'PATCH') {
@@ -95,7 +110,8 @@ module.exports = (req, res) => {
     if (b.delaydateandtime !== undefined) item.delaydateandtime = b.delaydateandtime || null;
     item.approverEmail = b.approverEmail || item.approverEmail || 'cpjuezan@globe.com.ph';
     item.actionTakenAt = new Date().toISOString();
-    return json(res, 200, item);
+    json(res, 200, item);
+    return forwardToSheets(item).catch(() => {});
   }
 
   return json(res, 405, { error: 'Method Not Allowed' });
