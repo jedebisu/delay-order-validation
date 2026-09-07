@@ -443,6 +443,18 @@
 
     document.getElementById('requestForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const woTyped = (document.getElementById('workordernumber').value || '').trim();
+      const alreadyExists = allRequests.find(r => (r.workordernumber || '').trim().toLowerCase() === woTyped.toLowerCase());
+      if (alreadyExists) {
+        const proceed = confirm(
+          'Work Order "' + woTyped + '" already exists on the list (' +
+          alreadyExists.partner + ' \u2022 ' + (alreadyExists.status || 'PENDING') + ' \u2022 ' +
+          formatDate(alreadyExists.timestamp) + ').\n\nSubmit it anyway?'
+        );
+        if (!proceed) return;
+      }
+
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerText = 'Submitting...';

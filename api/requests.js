@@ -63,12 +63,35 @@ const forwardToSheets = async (record) => {
   });
 };
 
+let restoredFromSheets = false;
+
+// Google Sheet is the master copy: on instance cold start we reload every
+// record from it so submissions/sign-offs survive site restarts.
+const restoreFromSheets = async () => {
+  if (restoredFromSheets || !SHEETS_WEBHOOK_URL) return;
+  restoredFromSheets = true;
+  try {
+    const resp = await fetch(SHEETS_WEBHOOK_URL, { signal: AbortSignal.timeout(15000) });
+    const data = JSON.parse(await resp.text());
+    if (data && data.ok && Array.isArray(data.records)) {
+      const valid = data.records
+        .filter((r) => Number.isFinite(Number(r.id)) && Number(r.id) > 0)
+        .sort((a, b) => b.id - a.id);
+      if (valid.length > 0) memoryRequests = valid;
+    }
+  } catch (e) {
+    // Sheet unreachable — fall back to the built-in seed data.
+  }
+};
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  await restoreFromSheets();
 
   if (req.method === 'GET') {
     return json(res, 200, memoryRequests);
