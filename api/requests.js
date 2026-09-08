@@ -59,7 +59,7 @@ const forwardToSheets = async (record) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(record),
-    signal: AbortSignal.timeout(4000)
+    signal: AbortSignal.timeout(20000)
   });
 };
 
@@ -116,8 +116,8 @@ module.exports = async (req, res) => {
       actionTakenAt: null
     };
     memoryRequests.unshift(newRequest);
-    json(res, 201, newRequest);
-    return forwardToSheets(newRequest).catch(() => {});
+    try { await forwardToSheets(newRequest); } catch (e) {}
+    return json(res, 201, newRequest);
   }
 
   if (req.method === 'PATCH') {
@@ -133,8 +133,8 @@ module.exports = async (req, res) => {
     if (b.delaydateandtime !== undefined) item.delaydateandtime = b.delaydateandtime || null;
     item.approverEmail = b.approverEmail || item.approverEmail || 'cpjuezan@globe.com.ph';
     item.actionTakenAt = new Date().toISOString();
-    json(res, 200, item);
-    return forwardToSheets(item).catch(() => {});
+    try { await forwardToSheets(item); } catch (e) {}
+    return json(res, 200, item);
   }
 
   return json(res, 405, { error: 'Method Not Allowed' });
