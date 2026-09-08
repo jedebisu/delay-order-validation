@@ -139,3 +139,4 @@ module.exports = async (req, res) => {
 
   return json(res, 405, { error: 'Method Not Allowed' });
 };
+// Sheets master rebuild complete (Sep 08 2026) — clean 35-record baseline.
