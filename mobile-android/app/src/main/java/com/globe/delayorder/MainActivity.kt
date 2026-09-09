@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun render() {
-        val sorted = allRequests.sortedByDescending { parseMillis(it.timestamp) }
+        val sorted = allRequests.sortedByDescending { parseMillis(it.timestamp) ?: Long.MIN_VALUE }
         val shown = if (showPendingOnly) sorted.filter { it.status == "PENDING" } else sorted
 
         btnPending.text = "Pending (${sorted.count { it.status == "PENDING" }})"
@@ -277,22 +277,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun parseMillis(ts: String?): Long {
-        if (ts.isNullOrBlank()) return 0L
+    private fun parseMillis(ts: String?): Long? {
+        if (ts.isNullOrBlank()) return null
+
+        val numeric = ts.toLongOrNull()
+        if (numeric != null) {
+            return if (numeric > 1_000_000_000_000L) numeric else numeric * 1000L
+        }
+
         val formats = arrayOf(
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss"
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
+            "EEE MMM dd HH:mm:ss zzz yyyy",
+            "EEE MMM d HH:mm:ss zzz yyyy",
+            "EEE MMM dd HH:mm:ss z yyyy",
+            "EEE MMM d HH:mm:ss z yyyy",
+            "MMM dd, yyyy hh:mm:ss a",
+            "MMM d, yyyy hh:mm:ss a"
         )
         for (f in formats) {
             try {
-                val sdf = SimpleDateFormat(f, Locale.getDefault())
-                sdf.timeZone = TimeZone.getTimeZone("UTC")
-                return sdf.parse(ts)?.time ?: 0L
+                val sdf = SimpleDateFormat(f, Locale.ENGLISH)
+                if (f.endsWith("'Z'")) sdf.timeZone = TimeZone.getTimeZone("UTC")
+                return sdf.parse(ts)?.time
             } catch (_: Exception) {
             }
         }
-        return 0L
+        return null
+    }
+
+    private fun formatTimestamp(ts: String?): String {
+        val millis = parseMillis(ts) ?: return "—"
+        return SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault()).format(Date(millis))
     }
 
     inner class RequestAdapter(private val onClick: (WorkOrderRequest) -> Unit) :
@@ -352,8 +370,7 @@ class MainActivity : AppCompatActivity() {
 
                 notesText.text = item.threewaynotes ?: ""
 
-                timeText.text = SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault())
-                    .format(Date(parseMillis(item.timestamp)))
+                timeText.text = formatTimestamp(item.timestamp)
 
                 itemView.setOnClickListener { onClick(item) }
             }
